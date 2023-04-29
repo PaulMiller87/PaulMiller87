@@ -1,0 +1,60 @@
+"```cpp
+#include <iostream>
+#include <cstdint>
+#include <unordered_map>
+
+class DynamicMemoryAllocator {
+public:
+    void* allocate(size_t size) {
+        uintptr_t address = m_nextAddress;
+        m_nextAddress += size;
+        m_allocatedSizes[address] = size;
+        return reinterpret_cast<void*>(address);
+    }
+
+    bool release(void* memory) {
+        uintptr_t address = reinterpret_cast<uintptr_t>(memory);
+        auto it = m_allocatedSizes.find(address);
+        if (it == m_allocatedSizes.end()) {
+            return false;
+        }
+        m_allocatedSizes.erase(it);
+        return true;
+    }
+
+    size_t allocatedSize(void* memory) {
+        uintptr_t address = reinterpret_cast<uintptr_t>(memory);
+        auto it = m_allocatedSizes.find(address);
+        if (it == m_allocatedSizes.end()) {
+            return 0;
+        }
+        return it->second;
+    }
+
+private:
+    uintptr_t m_nextAddress = 0x10000000;
+    std::unordered_map<uintptr_t, size_t> m_allocatedSizes;
+};
+
+int main() {
+    DynamicMemoryAllocator allocator;
+    
+    // Allocate memory
+    void* mem1 = allocator.allocate(128);
+    void* mem2 = allocator.allocate(64);
+
+    // Get allocated size
+    std::cout << ""Allocated Size for mem1: "" << allocator.allocatedSize(mem1) << std::endl;
+    std::cout << ""Allocated Size for mem2: "" << allocator.allocatedSize(mem2) << std+::endl;
+    
+    // Release memory
+    allocator.release(mem1);
+    allocator.release(mem2);
+    
+    // Test for non-allocated address
+    void* mem3 = reinterpret_cast<void*>(0xAAAA5555);
+    std::cout << ""Allocated Size for non-allocated address: "" << allocator.allocatedSize(mem3) << std::endl;
+    
+    return 0;
+}
+```"
